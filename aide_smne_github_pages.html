@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIDE-SMNE | Dislipidemias en Atención Primaria</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --ink: #1e2a3a;
+      --muted: #5d6b7a;
+      --primary: #005ad2;
+      --primary-dark: #001965;
+      --accent: #6dc28d;
+      --warn: #eaab00;
+      --danger: #e6553f;
+      --line: #dbe3ee;
+      --shadow: 0 10px 24px rgba(0, 25, 101, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #f7f9fc 0%, #eef4fb 100%);
+      color: var(--ink);
+    }
+
+    .container {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: white;
+      padding: 28px;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 900px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2, .card h3 {
+      margin-top: 0;
+      color: var(--primary-dark);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin: 4px 6px 0 0;
+    }
+
+    .b-primary { background: #eaf2ff; color: var(--primary-dark); }
+    .b-green { background: #eaf8ef; color: #25603f; }
+    .b-yellow { background: #fff8df; color: #8a6900; }
+    .b-red { background: #ffeceb; color: #963325; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid #cbd6e2;
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 90, 210, 0.12);
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .check {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .check label {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      line-height: 1.35;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #eef4fb;
+      color: var(--primary-dark);
+    }
+
+    .result-block {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .result-block h3 {
+      margin-bottom: 8px;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+      font-size: 0.95rem;
+    }
+
+    .metric:last-child { border-bottom: 0; }
+
+    .footer-note {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .mini-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .form-grid, .checks { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>AIDE-SMNE para Dislipidemias</h1>
+      <p>
+        Herramienta interactiva de libre acceso para apoyar la evaluación etiológica de dislipidemias en atención primaria.
+        Basada en el algoritmo AIDE-SMNE. Esta página es de apoyo clínico y no sustituye el juicio médico.
+      </p>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <div class="section-title">
+          <h2>Calculadora clínica</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field"><label>Colesterol total (mg/dL)</label><input id="ct" type="number" min="0" /></div>
+          <div class="field"><label>HDL-C (mg/dL)</label><input id="hdl" type="number" min="0" /></div>
+          <div class="field"><label>Triglicéridos (mg/dL)</label><input id="tg" type="number" min="0" /></div>
+          <div class="field"><label>LDL-C (mg/dL)</label><input id="ldl" type="number" min="0" /></div>
+          <div class="field"><label>ApoB (mg/dL, opcional)</label><input id="apob" type="number" min="0" /></div>
+          <div class="field">
+            <label>Sexo</label>
+            <select id="sexo">
+              <option value="hombre">Hombre</option>
+              <option value="mujer">Mujer</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>Datos clínicos clave</h3>
+        <div class="checks">
+          <div class="check"><label><input type="checkbox" id="xantomas" /> Xantomas tendinosos o visibles</label></div>
+          <div class="check"><label><input type="checkbox" id="arcus" /> Arcus cornealis precoz</label></div>
+          <div class="check"><label><input type="checkbox" id="hfamilia" /> Historia familiar de infarto prematuro</label></div>
+          <div class="check"><label><input type="checkbox" id="joven" /> Edad joven con dislipidemia significativa</label></div>
+          <div class="check"><label><input type="checkbox" id="obesidad" /> Obesidad central</label></div>
+          <div class="check"><label><input type="checkbox" id="hta" /> Hipertensión</label></div>
+          <div class="check"><label><input type="checkbox" id="diabetes" /> Diabetes o glucosa elevada</label></div>
+          <div class="check"><label><input type="checkbox" id="pancreatitis" /> Pancreatitis o sospecha de quilomicronemia</label></div>
+          <div class="check"><label><input type="checkbox" id="hipotiroidismo" /> Hipotiroidismo conocido</label></div>
+          <div class="check"><label><input type="checkbox" id="renal" /> Enfermedad renal</label></div>
+          <div class="check"><label><input type="checkbox" id="hepatica" /> Enfermedad hepática</label></div>
+          <div class="check"><label><input type="checkbox" id="alcohol" /> Consumo importante de alcohol o fármacos asociados</label></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" onclick="evaluar()">Interpretar algoritmo</button>
+          <button class="btn-secondary" onclick="limpiar()">Limpiar</button>
+        </div>
+
+        <p class="footer-note">
+          Sugerencia técnica: este archivo puede publicarse directamente en GitHub Pages como <strong>index.html</strong>.
+          Después se puede expandir con secciones educativas, referencias, versión móvil, y registro de cambios.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Resultado</h2>
+        <div id="resultado">
+          <div class="result-block">
+            <h3>Listo para calcular</h3>
+            <p>Introduce el perfil lipídico y marca los hallazgos clínicos relevantes. Aquí aparecerán el fenotipo, la sospecha etiológica, el nivel de riesgo y la acción sugerida.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function val(id) {
+      const n = parseFloat(document.getElementById(id).value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function checked(id) {
+      return document.getElementById(id).checked;
+    }
+
+    function badge(text, kind = 'b-primary') {
+      return `<span class="badge ${kind}">${text}</span>`;
+    }
+
+    function fenotipo(noHdl, tg, apob) {
+      const ratio = apob && apob > 0 ? noHdl / apob : null;
+      if (noHdl < 130 && tg < 150) return { nombre: 'Normolipidémico', riesgo: 'Bajo' };
+      if (noHdl >= 130 && tg < 150) return { nombre: 'Tipo IIa', riesgo: 'Moderado-Alto' };
+      if (noHdl >= 160 && tg >= 150 && tg <= 400 && ratio && ratio > 1.43) return { nombre: 'Tipo III', riesgo: 'Muy Alto' };
+      if (noHdl >= 160 && tg >= 400) return { nombre: 'Tipo V', riesgo: 'Muy Alto / Pancreatitis' };
+      if (noHdl >= 130 && tg >= 150) return { nombre: 'Tipo IIb', riesgo: 'Muy Alto' };
+      if (noHdl >= 130 && noHdl <= 159 && tg >= 150) return { nombre: 'Tipo IV', riesgo: 'Alto' };
+      return { nombre: 'Patrón no clasificable con reglas simples', riesgo: 'Indeterminado' };
+    }
+
+    function evaluar() {
+      const ct = val('ct');
+      const hdl = val('hdl');
+      const tg = val('tg');
+      const ldl = val('ldl');
+      const apob = val('apob');
+      const sexo = document.getElementById('sexo').value;
+
+      if (ct === null || hdl === null || tg === null || ldl === null) {
+        document.getElementById('resultado').innerHTML = `
+          <div class="result-block">
+            <h3>Faltan datos</h3>
+            <p>Para correr el algoritmo necesito al menos colesterol total, HDL-C, triglicéridos y LDL-C.</p>
+          </div>`;
+        return;
+      }
+
+      const noHdl = ct - hdl;
+      const razonCtHdl = hdl > 0 ? (ct / hdl) : null;
+      const razonTgHdl = hdl > 0 ? (tg / hdl) : null;
+      const razonNoHdlApoB = apob && apob > 0 ? (noHdl / apob) : null;
+      const feno = fenotipo(noHdl, tg, apob);
+
+      const hfScore = [checked('xantomas'), checked('hfamilia'), ldl > 190, checked('joven'), checked('arcus')].filter(Boolean).length;
+      const tipo3Score = [tg >= 150 && tg <= 400 && ct >= 150, razonNoHdlApoB && razonNoHdlApoB > 1.43, checked('xantomas'), checked('hfamilia')].filter(Boolean).length;
+      const ateroScore = [checked('obesidad'), checked('hta'), checked('diabetes'), tg > 150 && ((sexo === 'hombre' && hdl < 40) || (sexo === 'mujer' && hdl < 50)), razonTgHdl && razonTgHdl > 3].filter(Boolean).length;
+      const secundaria = [checked('hipotiroidismo'), checked('renal'), checked('hepatica'), checked('alcohol')].filter(Boolean).length;
+
+      let diagnostico = 'Dislipidemia de patrón incierto';
+      let accion = 'Considerar evaluación adicional o referencia según contexto clínico.';
+      let derivacion = 'Valorar según hallazgos.';
+      let color = 'b-yellow';
+
+      if (secundaria > 0) {
+        diagnostico = 'Probable dislipidemia secundaria';
+        accion = 'Buscar y tratar causa secundaria. Solicitar o revisar TSH, glucosa/HbA1c, creatinina/eGFR, pruebas hepáticas y exposición a fármacos/alcohol.';
+        derivacion = 'Referir según la causa subyacente.';
+        color = 'b-yellow';
+      }
+
+      if (ateroScore >= 3) {
+        diagnostico = 'Dislipidemia aterogénica / síndrome metabólico';
+        accion = 'Intervenir sobre peso, presión arterial, glucosa y estilo de vida. Considerar estatina y manejo de triglicéridos según perfil global.';
+        derivacion = 'Manejo en atención primaria si está estable y sin ASCVD.';
+        color = 'b-green';
+      }
+
+      if (tipo3Score >= 2) {
+        diagnostico = 'Probable disbetalipoproteinemia tipo III';
+        accion = 'Considerar confirmación adicional, idealmente ApoB y genotipo APOE si está disponible. Iniciar tratamiento hipolipemiante y valorar fibrato según TG.';
+        derivacion = 'Derivar a cardiología o especialista en lípidos.';
+        color = 'b-red';
+      }
+
+      if (hfScore >= 2) {
+        diagnostico = 'Probable hipercolesterolemia / hiperlipidemia familiar';
+        accion = 'Iniciar estatina potente si no existe contraindicación y valorar intensificación terapéutica. Hacer escrutinio familiar.';
+        derivacion = 'Derivación prioritaria a cardiología o clínica de lípidos.';
+        color = 'b-red';
+      }
+
+      if (tg > 400 || checked('pancreatitis')) {
+        diagnostico = 'Hipertrigliceridemia severa primaria o secundaria';
+        accion = 'Atención prioritaria. Restringir alcohol y grasa, descartar causas secundarias, valorar fibrato/fenofibrato y riesgo de pancreatitis.';
+        derivacion = 'Urgente a lípidos, medicina interna o gastroenterología según severidad.';
+        color = 'b-red';
+      }
+
+      let alertas = [];
+      if (ldl > 190) alertas.push('LDL-C >190 mg/dL: pensar en dislipidemia familiar.');
+      if (tg > 400) alertas.push('TG >400 mg/dL: riesgo de pancreatitis, requiere atención prioritaria.');
+      if (razonTgHdl && razonTgHdl > 3) alertas.push('TG/HDL >3: patrón compatible con dislipidemia aterogénica.');
+      if (razonCtHdl && razonCtHdl > 5) alertas.push('Razón CT/HDL >5: mayor riesgo global.');
+      if (razonNoHdlApoB && razonNoHdlApoB > 1.43) alertas.push('No-HDL/ApoB >1.43: sugiere tipo III.');
+      if (alertas.length === 0) alertas.push('Sin alertas mayores automáticas con las reglas simples del algoritmo.');
+
+      document.getElementById('resultado').innerHTML = `
+        <div class="result-block">
+          <h3>Clasificación principal</h3>
+          ${badge(`Fenotipo: ${feno.nombre}`, 'b-primary')}
+          ${badge(`Riesgo: ${feno.riesgo}`, color)}
+          ${badge(`${diagnostico}`, color)}
+        </div>
+
+        <div class="result-block">
+          <h3>Métricas derivadas</h3>
+          <div class="metric"><span>Colesterol no-HDL</span><strong>${noHdl.toFixed(1)} mg/dL</strong></div>
+          <div class="metric"><span>Razón CT/HDL</span><strong>${razonCtHdl ? razonCtHdl.toFixed(2) : 'No calculable'}</strong></div>
+          <div class="metric"><span>Razón TG/HDL</span><strong>${razonTgHdl ? razonTgHdl.toFixed(2) : 'No calculable'}</strong></div>
+          <div class="metric"><span>Razón no-HDL/ApoB</span><strong>${razonNoHdlApoB ? razonNoHdlApoB.toFixed(2) : 'No disponible'}</strong></div>
+        </div>
+
+        <div class="result-block">
+          <h3>Acción sugerida</h3>
+          <p><strong>Conducta:</strong> ${accion}</p>
+          <p><strong>Derivación:</strong> ${derivacion}</p>
+          <ul class="mini-list">${alertas.map(a => `<li>${a}</li>`).join('')}</ul>
+        </div>
+
+        <div class="result-block">
+          <h3>Descargo clínico</h3>
+          <p>Esta herramienta resume reglas del algoritmo AIDE-SMNE y sirve como apoyo para médicos de atención primaria. No sustituye guías, juicio clínico ni valoración especializada.</p>
+        </div>`;
+    }
+
+    function limpiar() {
+      document.querySelectorAll('input').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+      document.getElementById('sexo').value = 'hombre';
+      document.getElementById('resultado').innerHTML = `
+        <div class="result-block">
+          <h3>Listo para calcular</h3>
+          <p>Introduce el perfil lipídico y marca los hallazgos clínicos relevantes. Aquí aparecerán el fenotipo, la sospecha etiológica, el nivel de riesgo y la acción sugerida.</p>
+        </div>`;
+    }
+  </script>
+</body>
+</html>
