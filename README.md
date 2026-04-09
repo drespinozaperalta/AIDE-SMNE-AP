@@ -1,4 +1,4 @@
-AIDE-SMNE
+AIDE
 Algoritmo Integrado de Diagnóstico Etiológico para Dislipidemias en Atención Primaria
 
 Herramienta clínica de acceso libre diseñada para ayudar a médicos de atención primaria a evaluar, clasificar y orientar el diagnóstico etiológico de dislipidemias de forma estructurada y rápida.
