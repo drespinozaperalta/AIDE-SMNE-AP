@@ -219,7 +219,7 @@
 <body>
   <div class="container">
     <section class="hero">
-      <h1>ALGORITMO INTEGRADO DE DIAGNÓSTICO ETIOLÓGICO (AIDE) para Dislipidemias en primer nivel</h1>
+      <h1>ALGORITMO INTEGRADO DE DIAGNÓSTICO ETIOLÓGICO (AIDE) para Dislipidemias</h1>
       <p>
         Herramienta interactiva de libre acceso para apoyar la evaluación etiológica de dislipidemias en atención primaria.
         Basada en el algoritmo AIDE. Esta página es de apoyo clínico y no sustituye el juicio médico.
@@ -233,10 +233,21 @@
         </div>
 
         <div class="form-grid">
-          <div class="field"><label>Colesterol total (mg/dL)</label><input id="ct" type="number" min="0" /></div>
-          <div class="field"><label>HDL-C (mg/dL)</label><input id="hdl" type="number" min="0" /></div>
-          <div class="field"><label>Triglicéridos (mg/dL)</label><input id="tg" type="number" min="0" /></div>
-          <div class="field"><label>LDL-C (mg/dL)</label><input id="ldl" type="number" min="0" /></div>
+          <div class="field"><label>Colesterol total (mg/dL)</label><input id="ct" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
+          <div class="field"><label>HDL-C (mg/dL)</label><input id="hdl" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
+          <div class="field"><label>Triglicéridos (mg/dL)</label><input id="tg" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
+          <div class="field">
+            <label>Modo de LDL-C</label>
+            <select id="ldlModo" onchange="cambiarModoLDL()">
+              <option value="capturado">Capturado manualmente</option>
+              <option value="calculado">Calculado automáticamente</option>
+            </select>
+          </div>
+          <div class="field" id="ldlManualWrap"><label>LDL-C capturado (mg/dL)</label><input id="ldl" type="number" min="0" /></div>
+          <div class="field" id="ldlCalculadoWrap" style="display:none;">
+            <label>LDL-C calculado (mg/dL)</label>
+            <input id="ldlCalculado" type="text" readonly />
+          </div>
           <div class="field"><label>ApoB (mg/dL, opcional)</label><input id="apob" type="number" min="0" /></div>
           <div class="field">
             <label>Sexo</label>
@@ -246,6 +257,10 @@
             </select>
           </div>
         </div>
+
+        <p class="footer-note" style="margin-top: 8px;">
+          En modo <strong>calculado</strong>, el LDL-C se estima a partir de colesterol total, HDL-C y triglicéridos. Si la estimación no es válida, se mostrará como <strong>No estimable</strong>.
+        </p>
 
         <h3>Datos clínicos clave</h3>
         <div class="checks">
@@ -311,11 +326,57 @@
       return { nombre: 'Patrón no clasificable con reglas simples', riesgo: 'Indeterminado' };
     }
 
+    function calcularLDLIntegrado(ct, hdl, tg) {
+      if (ct === null || hdl === null || tg === null) return null;
+
+      const noHdl = ct - hdl;
+      if (tg > 3000) return null;
+
+      const ldlEstimado =
+        noHdl +
+        (-0.11948 * tg) +
+        (-0.0003782 * (tg * noHdl)) +
+        (0.000057614 * (tg * tg));
+
+      if (ldlEstimado < 0) return null;
+      if (ldlEstimado > noHdl) return Number(noHdl.toFixed(2));
+
+      return Number(ldlEstimado.toFixed(2));
+    }
+
+    function actualizarLDLCalculado() {
+      const ct = val('ct');
+      const hdl = val('hdl');
+      const tg = val('tg');
+      const ldl = calcularLDLIntegrado(ct, hdl, tg);
+      const input = document.getElementById('ldlCalculado');
+      if (!input) return;
+      input.value = ldl !== null ? ldl.toFixed(2) : 'No estimable';
+    }
+
+    function cambiarModoLDL() {
+      const modo = document.getElementById('ldlModo').value;
+      const manualWrap = document.getElementById('ldlManualWrap');
+      const calculadoWrap = document.getElementById('ldlCalculadoWrap');
+
+      if (modo === 'calculado') {
+        manualWrap.style.display = 'none';
+        calculadoWrap.style.display = 'block';
+        actualizarLDLCalculado();
+      } else {
+        manualWrap.style.display = 'block';
+        calculadoWrap.style.display = 'none';
+      }
+    }
+
     function evaluar() {
       const ct = val('ct');
       const hdl = val('hdl');
       const tg = val('tg');
-      const ldl = val('ldl');
+      const modoLDL = document.getElementById('ldlModo').value;
+      const ldlManual = val('ldl');
+      const ldlCalculado = calcularLDLIntegrado(ct, hdl, tg);
+      const ldl = modoLDL === 'calculado' ? ldlCalculado : ldlManual;
       const apob = val('apob');
       const sexo = document.getElementById('sexo').value;
 
@@ -323,7 +384,7 @@
         document.getElementById('resultado').innerHTML = `
           <div class="result-block">
             <h3>Faltan datos</h3>
-            <p>Para correr el algoritmo necesito al menos colesterol total, HDL-C, triglicéridos y LDL-C.</p>
+            <p>Para correr el algoritmo necesito colesterol total, HDL-C y triglicéridos, además de un LDL-C válido ya sea capturado o calculado.</p>
           </div>`;
         return;
       }
@@ -400,6 +461,8 @@
           <div class="metric"><span>Colesterol no-HDL</span><strong>${noHdl.toFixed(1)} mg/dL</strong></div>
           <div class="metric"><span>Razón CT/HDL</span><strong>${razonCtHdl ? razonCtHdl.toFixed(2) : 'No calculable'}</strong></div>
           <div class="metric"><span>Razón TG/HDL</span><strong>${razonTgHdl ? razonTgHdl.toFixed(2) : 'No calculable'}</strong></div>
+          <div class="metric"><span>LDL-C utilizado</span><strong>${ldl !== null ? ldl.toFixed(2) + ' mg/dL' : 'No estimable'}</strong></div>
+          <div class="metric"><span>Modo de LDL-C</span><strong>${modoLDL === 'calculado' ? 'Calculado automáticamente' : 'Capturado manualmente'}</strong></div>
           <div class="metric"><span>Razón no-HDL/ApoB</span><strong>${razonNoHdlApoB ? razonNoHdlApoB.toFixed(2) : 'No disponible'}</strong></div>
         </div>
 
@@ -412,7 +475,7 @@
 
         <div class="result-block">
           <h3>Descargo clínico</h3>
-          <p>Esta herramienta resume reglas del algoritmo AIDE y sirve como apoyo para médicos de atención primaria. No sustituye guías, juicio clínico ni valoración especializada.</p>
+          <p>Esta herramienta resume reglas del algoritmo AIDE-SMNE y sirve como apoyo para médicos de atención primaria. No sustituye guías, juicio clínico ni valoración especializada.</p>
         </div>`;
     }
 
@@ -422,12 +485,17 @@
         else el.value = '';
       });
       document.getElementById('sexo').value = 'hombre';
+      document.getElementById('ldlModo').value = 'capturado';
+      cambiarModoLDL();
       document.getElementById('resultado').innerHTML = `
         <div class="result-block">
           <h3>Listo para calcular</h3>
           <p>Introduce el perfil lipídico y marca los hallazgos clínicos relevantes. Aquí aparecerán el fenotipo, la sospecha etiológica, el nivel de riesgo y la acción sugerida.</p>
         </div>`;
     }
+  </script>
+  <script>
+    cambiarModoLDL();
   </script>
 </body>
 </html>
