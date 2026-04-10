@@ -15,12 +15,14 @@
       --accent: #6dc28d;
       --warn: #eaab00;
       --danger: #e6553f;
+      --ok: #3f9c35;
       --line: #dbe3ee;
       --shadow: 0 10px 24px rgba(0, 25, 101, 0.08);
       --radius: 18px;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Segoe UI", Arial, sans-serif;
@@ -29,7 +31,7 @@
     }
 
     .container {
-      width: min(1200px, calc(100% - 32px));
+      width: min(1240px, calc(100% - 32px));
       margin: 0 auto;
       padding: 24px 0 48px;
     }
@@ -45,14 +47,14 @@
 
     .hero h1 {
       margin: 0 0 8px;
-      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
     }
 
     .hero p {
       margin: 0;
-      max-width: 900px;
+      max-width: 980px;
       line-height: 1.5;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.94);
     }
 
     .grid {
@@ -77,8 +79,15 @@
     .section-title {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
       margin-bottom: 14px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
     }
 
     .badge {
@@ -94,6 +103,7 @@
     .b-green { background: #eaf8ef; color: #25603f; }
     .b-yellow { background: #fff8df; color: #8a6900; }
     .b-red { background: #ffeceb; color: #963325; }
+    .b-gray { background: #eef2f7; color: #465363; }
 
     .form-grid {
       display: grid;
@@ -122,6 +132,13 @@
     .field input:focus, .field select:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(0, 90, 210, 0.12);
+    }
+
+    .hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
     }
 
     .checks {
@@ -173,6 +190,12 @@
       color: var(--primary-dark);
     }
 
+    .btn-outline {
+      background: white;
+      color: var(--primary-dark);
+      border: 1px solid #cbd6e2;
+    }
+
     .result-block {
       border: 1px solid var(--line);
       background: #fbfdff;
@@ -210,9 +233,63 @@
       line-height: 1.45;
     }
 
+    .risk-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      color: white;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .risk-low { background: linear-gradient(135deg, #2b8f35, #46b04f); }
+    .risk-mid { background: linear-gradient(135deg, #bd8b07, #e4ae11); }
+    .risk-high { background: linear-gradient(135deg, #b44a1b, #df6a36); }
+    .risk-vhigh { background: linear-gradient(135deg, #9d2430, #d63c4e); }
+    .risk-unknown { background: linear-gradient(135deg, #5e6c7b, #7b8895); }
+
+    .pill-row {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: #eef4fb;
+      color: var(--primary-dark);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .disclaimer {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .actions, .no-print {
+        display: none !important;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .card, .hero {
+        box-shadow: none;
+        border: 1px solid #d9d9d9;
+      }
+    }
+
     @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-      .form-grid, .checks { grid-template-columns: 1fr; }
+      .grid, .form-grid, .checks { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -224,6 +301,10 @@
         Herramienta interactiva de libre acceso para apoyar la evaluación etiológica de dislipidemias en atención primaria.
         Basada en el algoritmo AIDE. Esta página es de apoyo clínico y no sustituye el juicio médico.
       </p>
+      <p class="subtle" style="color: rgba(255,255,255,0.90); margin-top: 10px;">
+        Incluye LDL-C capturado o calculado, ApoB capturada o estimada, colesterol no-HDL, colesterol remanente,
+        razones lipídicas, semaforización de riesgo y notas metodológicas.
+      </p>
     </section>
 
     <div class="grid">
@@ -233,22 +314,70 @@
         </div>
 
         <div class="form-grid">
-          <div class="field"><label>Colesterol total (mg/dL)</label><input id="ct" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
-          <div class="field"><label>HDL-C (mg/dL)</label><input id="hdl" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
-          <div class="field"><label>Triglicéridos (mg/dL)</label><input id="tg" type="number" min="0" oninput="actualizarLDLCalculado()" /></div>
+          <div class="field">
+            <label>Colesterol total (mg/dL)</label>
+            <input id="ct" type="number" min="0" step="0.01" oninput="actualizarCalculosAutomaticos()" />
+          </div>
+
+          <div class="field">
+            <label>HDL-C (mg/dL)</label>
+            <input id="hdl" type="number" min="0" step="0.01" oninput="actualizarCalculosAutomaticos()" />
+          </div>
+
+          <div class="field">
+            <label>Triglicéridos (mg/dL)</label>
+            <input id="tg" type="number" min="0" step="0.01" oninput="actualizarCalculosAutomaticos()" />
+            <div class="hint">Si TG son muy altos, algunas estimaciones pueden no ser válidas.</div>
+          </div>
+
+          <div class="field">
+            <label>Colesterol no-HDL (mg/dL)</label>
+            <input id="noHdlVisible" type="text" readonly />
+            <div class="hint">Se calcula automáticamente como colesterol total menos HDL-C.</div>
+          </div>
+
           <div class="field">
             <label>Modo de LDL-C</label>
-            <select id="ldlModo" onchange="cambiarModoLDL()">
+            <select id="ldlModo" onchange="cambiarModoLDL(); actualizarCalculosAutomaticos();">
               <option value="capturado">Capturado manualmente</option>
               <option value="calculado">Calculado automáticamente</option>
             </select>
           </div>
-          <div class="field" id="ldlManualWrap"><label>LDL-C capturado (mg/dL)</label><input id="ldl" type="number" min="0" /></div>
+
+          <div class="field" id="ldlManualWrap">
+            <label>LDL-C capturado (mg/dL)</label>
+            <input id="ldl" type="number" min="0" step="0.01" oninput="actualizarCalculosAutomaticos()" />
+          </div>
+
           <div class="field" id="ldlCalculadoWrap" style="display:none;">
             <label>LDL-C calculado (mg/dL)</label>
             <input id="ldlCalculado" type="text" readonly />
           </div>
-          <div class="field"><label>ApoB (mg/dL, opcional)</label><input id="apob" type="number" min="0" /></div>
+
+          <div class="field">
+            <label>Colesterol remanente estimado (mg/dL)</label>
+            <input id="remanenteVisible" type="text" readonly />
+            <div class="hint">Se calcula como colesterol total menos HDL-C menos LDL-C utilizado.</div>
+          </div>
+
+          <div class="field">
+            <label>Modo de ApoB</label>
+            <select id="apobModo" onchange="cambiarModoApoB(); actualizarCalculosAutomaticos();">
+              <option value="capturada">Capturada manualmente</option>
+              <option value="estimada">Estimada automáticamente (eApoB)</option>
+            </select>
+          </div>
+
+          <div class="field" id="apobManualWrap">
+            <label>ApoB capturada (mg/dL)</label>
+            <input id="apob" type="number" min="0" step="0.01" oninput="actualizarCalculosAutomaticos()" />
+          </div>
+
+          <div class="field" id="apobEstimadaWrap" style="display:none;">
+            <label>eApoB calculada (mg/dL)</label>
+            <input id="apobCalculada" type="text" readonly />
+          </div>
+
           <div class="field">
             <label>Sexo</label>
             <select id="sexo">
@@ -259,7 +388,10 @@
         </div>
 
         <p class="footer-note" style="margin-top: 8px;">
-          En modo <strong>calculado</strong>, el LDL-C se estima a partir de colesterol total, HDL-C y triglicéridos. Si la estimación no es válida, se mostrará como <strong>No estimable</strong>.
+          En modo <strong>calculado</strong>, el LDL-C se estima con la ecuación integrada a partir de colesterol total,
+          HDL-C y triglicéridos. En modo <strong>estimada</strong>, la eApoB se calcula a partir de colesterol total,
+          HDL-C, colesterol no-HDL y triglicéridos. El colesterol remanente se calcula como <strong>CT − HDL − LDL</strong>
+          usando el LDL realmente seleccionado por el usuario.
         </p>
 
         <h3>Datos clínicos clave</h3>
@@ -281,12 +413,22 @@
         <div class="actions">
           <button class="btn-primary" onclick="evaluar()">Interpretar algoritmo</button>
           <button class="btn-secondary" onclick="limpiar()">Limpiar</button>
+          <button class="btn-outline" onclick="window.print()">Imprimir resultado</button>
         </div>
 
-        <p class="footer-note">
-          Sugerencia técnica: este archivo puede publicarse directamente en GitHub Pages como <strong>index.html</strong>.
-          Después se puede expandir con secciones educativas, referencias, versión móvil, y registro de cambios.
-        </p>
+        <div class="result-block no-print" style="margin-top: 16px;">
+          <h3>Transparencia metodológica</h3>
+          <div class="pill-row">
+            <span class="pill">No-HDL = CT − HDL</span>
+            <span class="pill">Remanente = CT − HDL − LDL</span>
+            <span class="pill">Tipo III apoyado por No-HDL/ApoB &gt; 1.43</span>
+            <span class="pill">TG/HDL &gt; 3 sugiere dislipidemia aterogénica</span>
+            <span class="pill">CT/HDL &gt; 5 sugiere mayor riesgo global</span>
+          </div>
+          <p class="footer-note">
+            La herramienta resume reglas de apoyo, no reemplaza guías clínicas, juicio clínico ni evaluación especializada.
+          </p>
+        </div>
       </section>
 
       <section class="card">
@@ -297,13 +439,25 @@
             <p>Introduce el perfil lipídico y marca los hallazgos clínicos relevantes. Aquí aparecerán el fenotipo, la sospecha etiológica, el nivel de riesgo y la acción sugerida.</p>
           </div>
         </div>
+
+        <div class="result-block">
+          <h3>Limitaciones de la calculadora</h3>
+          <ul class="mini-list">
+            <li>No sustituye valoración especializada.</li>
+            <li>La estimación de LDL-C, eApoB y colesterol remanente depende de la calidad de los datos introducidos.</li>
+            <li>La clasificación fenotípica es de apoyo y puede solaparse con causas secundarias.</li>
+            <li>En hipertrigliceridemia severa, la prioridad clínica cambia por riesgo de pancreatitis.</li>
+          </ul>
+        </div>
       </section>
     </div>
   </div>
 
   <script>
     function val(id) {
-      const n = parseFloat(document.getElementById(id).value);
+      const raw = document.getElementById(id).value;
+      if (raw === "") return null;
+      const n = parseFloat(raw);
       return Number.isFinite(n) ? n : null;
     }
 
@@ -311,19 +465,17 @@
       return document.getElementById(id).checked;
     }
 
-    function badge(text, kind = 'b-primary') {
+    function badge(text, kind = "b-primary") {
       return `<span class="badge ${kind}">${text}</span>`;
     }
 
-    function fenotipo(noHdl, tg, apob) {
-      const ratio = apob && apob > 0 ? noHdl / apob : null;
-      if (noHdl < 130 && tg < 150) return { nombre: 'Normolipidémico', riesgo: 'Bajo' };
-      if (noHdl >= 130 && tg < 150) return { nombre: 'Tipo IIa', riesgo: 'Moderado-Alto' };
-      if (noHdl >= 160 && tg >= 150 && tg <= 400 && ratio && ratio > 1.43) return { nombre: 'Tipo III', riesgo: 'Muy Alto' };
-      if (noHdl >= 160 && tg >= 400) return { nombre: 'Tipo V', riesgo: 'Muy Alto / Pancreatitis' };
-      if (noHdl >= 130 && tg >= 150) return { nombre: 'Tipo IIb', riesgo: 'Muy Alto' };
-      if (noHdl >= 130 && noHdl <= 159 && tg >= 150) return { nombre: 'Tipo IV', riesgo: 'Alto' };
-      return { nombre: 'Patrón no clasificable con reglas simples', riesgo: 'Indeterminado' };
+    function formatOrNA(value, suffix = "") {
+      return value !== null ? `${value.toFixed(2)}${suffix}` : "No estimable";
+    }
+
+    function calcularNoHdl(ct, hdl) {
+      if (ct === null || hdl === null) return null;
+      return Number((ct - hdl).toFixed(2));
     }
 
     function calcularLDLIntegrado(ct, hdl, tg) {
@@ -338,50 +490,144 @@
         (-0.0003782 * (tg * noHdl)) +
         (0.000057614 * (tg * tg));
 
+      if (!Number.isFinite(ldlEstimado)) return null;
       if (ldlEstimado < 0) return null;
       if (ldlEstimado > noHdl) return Number(noHdl.toFixed(2));
 
       return Number(ldlEstimado.toFixed(2));
     }
 
-    function actualizarLDLCalculado() {
-      const ct = val('ct');
-      const hdl = val('hdl');
-      const tg = val('tg');
-      const ldl = calcularLDLIntegrado(ct, hdl, tg);
-      const input = document.getElementById('ldlCalculado');
-      if (!input) return;
-      input.value = ldl !== null ? ldl.toFixed(2) : 'No estimable';
+    function calcularEApoB(ct, hdl, tg) {
+      if (ct === null || hdl === null || tg === null) return null;
+      if (hdl <= 0) return null;
+
+      const nonHdl = ct - hdl;
+
+      const eApoB =
+        13.0302934999004 +
+        (0.527632045666066 * nonHdl) +
+        (-0.0443923795689725 * tg) +
+        (2.75403562458315 * (nonHdl / hdl)) +
+        (0.0000819528271177854 * (tg * nonHdl)) +
+        (-0.0000198251573567261 * (tg * tg));
+
+      if (!Number.isFinite(eApoB) || eApoB < 0) return null;
+
+      return Number(eApoB.toFixed(2));
+    }
+
+    function calcularColesterolRemanente(ct, hdl, ldl) {
+      if (ct === null || hdl === null || ldl === null) return null;
+
+      const remanente = ct - hdl - ldl;
+
+      if (!Number.isFinite(remanente)) return null;
+      if (remanente < 0) return null;
+
+      return Number(remanente.toFixed(2));
+    }
+
+    function obtenerLDLUsadoParaVista() {
+      const ct = val("ct");
+      const hdl = val("hdl");
+      const tg = val("tg");
+      const modoLDL = document.getElementById("ldlModo").value;
+      const ldlManual = val("ldl");
+      const ldlCalculado = calcularLDLIntegrado(ct, hdl, tg);
+      return modoLDL === "calculado" ? ldlCalculado : ldlManual;
+    }
+
+    function actualizarCalculosAutomaticos() {
+      const ct = val("ct");
+      const hdl = val("hdl");
+      const tg = val("tg");
+
+      const noHdl = calcularNoHdl(ct, hdl);
+      const ldlCalc = calcularLDLIntegrado(ct, hdl, tg);
+      const apobCalc = calcularEApoB(ct, hdl, tg);
+      const ldlUsado = obtenerLDLUsadoParaVista();
+      const remanente = calcularColesterolRemanente(ct, hdl, ldlUsado);
+
+      document.getElementById("noHdlVisible").value = noHdl !== null ? noHdl.toFixed(2) : "No estimable";
+      document.getElementById("ldlCalculado").value = ldlCalc !== null ? ldlCalc.toFixed(2) : "No estimable";
+      document.getElementById("apobCalculada").value = apobCalc !== null ? apobCalc.toFixed(2) : "No estimable";
+      document.getElementById("remanenteVisible").value = remanente !== null ? remanente.toFixed(2) : "No calculable";
     }
 
     function cambiarModoLDL() {
-      const modo = document.getElementById('ldlModo').value;
-      const manualWrap = document.getElementById('ldlManualWrap');
-      const calculadoWrap = document.getElementById('ldlCalculadoWrap');
+      const modo = document.getElementById("ldlModo").value;
+      document.getElementById("ldlManualWrap").style.display = modo === "capturado" ? "block" : "none";
+      document.getElementById("ldlCalculadoWrap").style.display = modo === "calculado" ? "block" : "none";
+    }
 
-      if (modo === 'calculado') {
-        manualWrap.style.display = 'none';
-        calculadoWrap.style.display = 'block';
-        actualizarLDLCalculado();
+    function cambiarModoApoB() {
+      const modo = document.getElementById("apobModo").value;
+      document.getElementById("apobManualWrap").style.display = modo === "capturada" ? "block" : "none";
+      document.getElementById("apobEstimadaWrap").style.display = modo === "estimada" ? "block" : "none";
+    }
+
+    function fenotipo(noHdl, tg, apob) {
+      const ratio = apob && apob > 0 ? noHdl / apob : null;
+
+      if (noHdl < 130 && tg < 150) return { nombre: "Normolipidémico", riesgo: "Bajo" };
+      if (noHdl >= 130 && tg < 150) return { nombre: "Tipo IIa", riesgo: "Moderado-Alto" };
+      if (noHdl >= 160 && tg >= 150 && tg <= 400 && ratio && ratio > 1.43) return { nombre: "Tipo III", riesgo: "Muy Alto" };
+      if (noHdl >= 160 && tg >= 400) return { nombre: "Tipo V", riesgo: "Muy Alto / Pancreatitis" };
+      if (noHdl >= 130 && tg >= 150) return { nombre: "Tipo IIb", riesgo: "Muy Alto" };
+      if (noHdl >= 130 && noHdl <= 159 && tg >= 150) return { nombre: "Tipo IV", riesgo: "Alto" };
+
+      return { nombre: "Patrón no clasificable con reglas simples", riesgo: "Indeterminado" };
+    }
+
+    function riskClass(riesgo) {
+      if (riesgo === "Bajo") return "risk-low";
+      if (riesgo === "Moderado-Alto" || riesgo === "Alto") return "risk-mid";
+      if (riesgo === "Muy Alto") return "risk-vhigh";
+      if (riesgo.includes("Pancreatitis")) return "risk-vhigh";
+      return "risk-unknown";
+    }
+
+    function resumenFormulas(modoLDL, modoApoB, ldl, apob) {
+      const notas = [];
+
+      if (modoLDL === "calculado") {
+        notas.push(`LDL-C estimado con ecuación integrada${ldl === null ? " y no fue estimable" : ""}.`);
       } else {
-        manualWrap.style.display = 'block';
-        calculadoWrap.style.display = 'none';
+        notas.push("LDL-C capturado manualmente.");
       }
+
+      if (modoApoB === "estimada") {
+        notas.push(`ApoB estimada con ecuación eApoB${apob === null ? " y no fue estimable" : ""}.`);
+      } else if (apob !== null) {
+        notas.push("ApoB capturada manualmente.");
+      } else {
+        notas.push("ApoB no disponible.");
+      }
+
+      notas.push("Colesterol remanente calculado como CT − HDL − LDL utilizado.");
+
+      return notas;
     }
 
     function evaluar() {
-      const ct = val('ct');
-      const hdl = val('hdl');
-      const tg = val('tg');
-      const modoLDL = document.getElementById('ldlModo').value;
-      const ldlManual = val('ldl');
+      const ct = val("ct");
+      const hdl = val("hdl");
+      const tg = val("tg");
+      const sexo = document.getElementById("sexo").value;
+
+      const modoLDL = document.getElementById("ldlModo").value;
+      const modoApoB = document.getElementById("apobModo").value;
+
+      const ldlManual = val("ldl");
       const ldlCalculado = calcularLDLIntegrado(ct, hdl, tg);
-      const ldl = modoLDL === 'calculado' ? ldlCalculado : ldlManual;
-      const apob = val('apob');
-      const sexo = document.getElementById('sexo').value;
+      const ldl = modoLDL === "calculado" ? ldlCalculado : ldlManual;
+
+      const apobManual = val("apob");
+      const apobEstimado = calcularEApoB(ct, hdl, tg);
+      const apob = modoApoB === "estimada" ? apobEstimado : apobManual;
 
       if (ct === null || hdl === null || tg === null || ldl === null) {
-        document.getElementById('resultado').innerHTML = `
+        document.getElementById("resultado").innerHTML = `
           <div class="result-block">
             <h3>Faltan datos</h3>
             <p>Para correr el algoritmo necesito colesterol total, HDL-C y triglicéridos, además de un LDL-C válido ya sea capturado o calculado.</p>
@@ -389,113 +635,178 @@
         return;
       }
 
-      const noHdl = ct - hdl;
+      const noHdl = calcularNoHdl(ct, hdl);
+      const colesterolRemanente = calcularColesterolRemanente(ct, hdl, ldl);
       const razonCtHdl = hdl > 0 ? (ct / hdl) : null;
       const razonTgHdl = hdl > 0 ? (tg / hdl) : null;
       const razonNoHdlApoB = apob && apob > 0 ? (noHdl / apob) : null;
+
       const feno = fenotipo(noHdl, tg, apob);
 
-      const hfScore = [checked('xantomas'), checked('hfamilia'), ldl > 190, checked('joven'), checked('arcus')].filter(Boolean).length;
-      const tipo3Score = [tg >= 150 && tg <= 400 && ct >= 150, razonNoHdlApoB && razonNoHdlApoB > 1.43, checked('xantomas'), checked('hfamilia')].filter(Boolean).length;
-      const ateroScore = [checked('obesidad'), checked('hta'), checked('diabetes'), tg > 150 && ((sexo === 'hombre' && hdl < 40) || (sexo === 'mujer' && hdl < 50)), razonTgHdl && razonTgHdl > 3].filter(Boolean).length;
-      const secundaria = [checked('hipotiroidismo'), checked('renal'), checked('hepatica'), checked('alcohol')].filter(Boolean).length;
+      const hfScore = [
+        checked("xantomas"),
+        checked("hfamilia"),
+        ldl > 190,
+        checked("joven"),
+        checked("arcus")
+      ].filter(Boolean).length;
 
-      let diagnostico = 'Dislipidemia de patrón incierto';
-      let accion = 'Considerar evaluación adicional o referencia según contexto clínico.';
-      let derivacion = 'Valorar según hallazgos.';
-      let color = 'b-yellow';
+      const tipo3Score = [
+        tg >= 150 && tg <= 400 && ct >= 150,
+        razonNoHdlApoB && razonNoHdlApoB > 1.43,
+        checked("xantomas"),
+        checked("hfamilia")
+      ].filter(Boolean).length;
+
+      const ateroScore = [
+        checked("obesidad"),
+        checked("hta"),
+        checked("diabetes"),
+        tg > 150 && ((sexo === "hombre" && hdl < 40) || (sexo === "mujer" && hdl < 50)),
+        razonTgHdl && razonTgHdl > 3
+      ].filter(Boolean).length;
+
+      const secundaria = [
+        checked("hipotiroidismo"),
+        checked("renal"),
+        checked("hepatica"),
+        checked("alcohol")
+      ].filter(Boolean).length;
+
+      let diagnostico = "Dislipidemia de patrón incierto";
+      let accion = "Considerar evaluación adicional o referencia según contexto clínico.";
+      let derivacion = "Valorar según hallazgos.";
+      let color = "b-yellow";
 
       if (secundaria > 0) {
-        diagnostico = 'Probable dislipidemia secundaria';
-        accion = 'Buscar y tratar causa secundaria. Solicitar o revisar TSH, glucosa/HbA1c, creatinina/eGFR, pruebas hepáticas y exposición a fármacos/alcohol.';
-        derivacion = 'Referir según la causa subyacente.';
-        color = 'b-yellow';
+        diagnostico = "Probable dislipidemia secundaria";
+        accion = "Buscar y tratar causa secundaria. Solicitar o revisar TSH, glucosa/HbA1c, creatinina/eGFR, pruebas hepáticas y exposición a fármacos o alcohol.";
+        derivacion = "Referir según la causa subyacente.";
+        color = "b-yellow";
       }
 
       if (ateroScore >= 3) {
-        diagnostico = 'Dislipidemia aterogénica / síndrome metabólico';
-        accion = 'Intervenir sobre peso, presión arterial, glucosa y estilo de vida. Considerar estatina y manejo de triglicéridos según perfil global.';
-        derivacion = 'Manejo en atención primaria si está estable y sin ASCVD.';
-        color = 'b-green';
+        diagnostico = "Dislipidemia aterogénica / síndrome metabólico";
+        accion = "Intervenir sobre peso, presión arterial, glucosa y estilo de vida. Considerar estatina y manejo de triglicéridos según perfil global.";
+        derivacion = "Manejo en atención primaria si está estable y sin ASCVD.";
+        color = "b-green";
       }
 
       if (tipo3Score >= 2) {
-        diagnostico = 'Probable disbetalipoproteinemia tipo III';
-        accion = 'Considerar confirmación adicional, idealmente ApoB y genotipo APOE si está disponible. Iniciar tratamiento hipolipemiante y valorar fibrato según TG.';
-        derivacion = 'Derivar a cardiología o especialista en lípidos.';
-        color = 'b-red';
+        diagnostico = "Probable disbetalipoproteinemia tipo III";
+        accion = "Considerar confirmación adicional, idealmente ApoB y genotipo APOE si está disponible. Iniciar tratamiento hipolipemiante y valorar fibrato según TG.";
+        derivacion = "Derivar a cardiología o especialista en lípidos.";
+        color = "b-red";
       }
 
       if (hfScore >= 2) {
-        diagnostico = 'Probable hipercolesterolemia / hiperlipidemia familiar';
-        accion = 'Iniciar estatina potente si no existe contraindicación y valorar intensificación terapéutica. Hacer escrutinio familiar.';
-        derivacion = 'Derivación prioritaria a cardiología o clínica de lípidos.';
-        color = 'b-red';
+        diagnostico = "Probable hipercolesterolemia / hiperlipidemia familiar";
+        accion = "Iniciar estatina potente si no existe contraindicación y valorar intensificación terapéutica. Hacer escrutinio familiar.";
+        derivacion = "Derivación prioritaria a cardiología o clínica de lípidos.";
+        color = "b-red";
       }
 
-      if (tg > 400 || checked('pancreatitis')) {
-        diagnostico = 'Hipertrigliceridemia severa primaria o secundaria';
-        accion = 'Atención prioritaria. Restringir alcohol y grasa, descartar causas secundarias, valorar fibrato/fenofibrato y riesgo de pancreatitis.';
-        derivacion = 'Urgente a lípidos, medicina interna o gastroenterología según severidad.';
-        color = 'b-red';
+      if (tg > 400 || checked("pancreatitis")) {
+        diagnostico = "Hipertrigliceridemia severa primaria o secundaria";
+        accion = "Atención prioritaria. Restringir alcohol y grasa, descartar causas secundarias, valorar fibrato o fenofibrato y riesgo de pancreatitis.";
+        derivacion = "Urgente a lípidos, medicina interna o gastroenterología según severidad.";
+        color = "b-red";
       }
 
-      let alertas = [];
-      if (ldl > 190) alertas.push('LDL-C >190 mg/dL: pensar en dislipidemia familiar.');
-      if (tg > 400) alertas.push('TG >400 mg/dL: riesgo de pancreatitis, requiere atención prioritaria.');
-      if (razonTgHdl && razonTgHdl > 3) alertas.push('TG/HDL >3: patrón compatible con dislipidemia aterogénica.');
-      if (razonCtHdl && razonCtHdl > 5) alertas.push('Razón CT/HDL >5: mayor riesgo global.');
-      if (razonNoHdlApoB && razonNoHdlApoB > 1.43) alertas.push('No-HDL/ApoB >1.43: sugiere tipo III.');
-      if (alertas.length === 0) alertas.push('Sin alertas mayores automáticas con las reglas simples del algoritmo.');
+      const alertas = [];
+      if (ldl > 190) alertas.push("LDL-C >190 mg/dL: pensar en dislipidemia familiar.");
+      if (tg > 400) alertas.push("TG >400 mg/dL: riesgo de pancreatitis, requiere atención prioritaria.");
+      if (tg > 1000) alertas.push("TG >1000 mg/dL: hipertrigliceridemia muy severa con preocupación clínica inmediata.");
+      if (razonTgHdl && razonTgHdl > 3) alertas.push("TG/HDL >3: patrón compatible con dislipidemia aterogénica.");
+      if (razonCtHdl && razonCtHdl > 5) alertas.push("Razón CT/HDL >5: mayor riesgo global.");
+      if (razonNoHdlApoB && razonNoHdlApoB > 1.43) alertas.push("No-HDL/ApoB >1.43: sugiere tipo III.");
+      if (colesterolRemanente !== null && colesterolRemanente >= 30) {
+        alertas.push("Colesterol remanente elevado: sugiere mayor carga de lipoproteínas ricas en triglicéridos.");
+      }
+      if (checked("xantomas")) alertas.push("Xantomas: refuerzan sospecha de dislipidemia primaria.");
+      if (alertas.length === 0) alertas.push("Sin alertas mayores automáticas con las reglas simples del algoritmo.");
 
-      document.getElementById('resultado').innerHTML = `
+      const notasFormulas = resumenFormulas(modoLDL, modoApoB, ldl, apob);
+
+      document.getElementById("resultado").innerHTML = `
+        <div class="risk-banner ${riskClass(feno.riesgo)}">
+          <div>Semáforo de riesgo</div>
+          <div>${feno.riesgo}</div>
+        </div>
+
         <div class="result-block">
           <h3>Clasificación principal</h3>
-          ${badge(`Fenotipo: ${feno.nombre}`, 'b-primary')}
+          ${badge(`Fenotipo: ${feno.nombre}`, "b-primary")}
           ${badge(`Riesgo: ${feno.riesgo}`, color)}
-          ${badge(`${diagnostico}`, color)}
+          ${badge(diagnostico, color)}
         </div>
 
         <div class="result-block">
           <h3>Métricas derivadas</h3>
-          <div class="metric"><span>Colesterol no-HDL</span><strong>${noHdl.toFixed(1)} mg/dL</strong></div>
-          <div class="metric"><span>Razón CT/HDL</span><strong>${razonCtHdl ? razonCtHdl.toFixed(2) : 'No calculable'}</strong></div>
-          <div class="metric"><span>Razón TG/HDL</span><strong>${razonTgHdl ? razonTgHdl.toFixed(2) : 'No calculable'}</strong></div>
-          <div class="metric"><span>LDL-C utilizado</span><strong>${ldl !== null ? ldl.toFixed(2) + ' mg/dL' : 'No estimable'}</strong></div>
-          <div class="metric"><span>Modo de LDL-C</span><strong>${modoLDL === 'calculado' ? 'Calculado automáticamente' : 'Capturado manualmente'}</strong></div>
-          <div class="metric"><span>Razón no-HDL/ApoB</span><strong>${razonNoHdlApoB ? razonNoHdlApoB.toFixed(2) : 'No disponible'}</strong></div>
+          <div class="metric"><span>Colesterol no-HDL</span><strong>${noHdl.toFixed(2)} mg/dL</strong></div>
+          <div class="metric"><span>Colesterol remanente</span><strong>${colesterolRemanente !== null ? colesterolRemanente.toFixed(2) + " mg/dL" : "No calculable"}</strong></div>
+          <div class="metric"><span>Razón CT/HDL</span><strong>${razonCtHdl ? razonCtHdl.toFixed(2) : "No calculable"}</strong></div>
+          <div class="metric"><span>Razón TG/HDL</span><strong>${razonTgHdl ? razonTgHdl.toFixed(2) : "No calculable"}</strong></div>
+          <div class="metric"><span>LDL-C utilizado</span><strong>${formatOrNA(ldl, " mg/dL")}</strong></div>
+          <div class="metric"><span>Modo de LDL-C</span><strong>${modoLDL === "calculado" ? "Calculado automáticamente" : "Capturado manualmente"}</strong></div>
+          <div class="metric"><span>ApoB utilizada</span><strong>${formatOrNA(apob, " mg/dL")}</strong></div>
+          <div class="metric"><span>Modo de ApoB</span><strong>${modoApoB === "estimada" ? "Estimada automáticamente (eApoB)" : "Capturada manualmente"}</strong></div>
+          <div class="metric"><span>Razón no-HDL/ApoB</span><strong>${razonNoHdlApoB ? razonNoHdlApoB.toFixed(2) : "No disponible"}</strong></div>
         </div>
 
         <div class="result-block">
           <h3>Acción sugerida</h3>
           <p><strong>Conducta:</strong> ${accion}</p>
           <p><strong>Derivación:</strong> ${derivacion}</p>
-          <ul class="mini-list">${alertas.map(a => `<li>${a}</li>`).join('')}</ul>
+        </div>
+
+        <div class="result-block">
+          <h3>Alertas clínicas</h3>
+          <ul class="mini-list">${alertas.map(a => `<li>${a}</li>`).join("")}</ul>
+        </div>
+
+        <div class="result-block">
+          <h3>Notas metodológicas</h3>
+          <ul class="mini-list">${notasFormulas.map(n => `<li>${n}</li>`).join("")}</ul>
         </div>
 
         <div class="result-block">
           <h3>Descargo clínico</h3>
-          <p>Esta herramienta resume reglas del algoritmo AIDE-SMNE y sirve como apoyo para médicos de atención primaria. No sustituye guías, juicio clínico ni valoración especializada.</p>
+          <p class="disclaimer">
+            Esta herramienta resume reglas del algoritmo AIDE-SMNE y sirve como apoyo para médicos de atención primaria.
+            No sustituye guías, juicio clínico ni valoración especializada. Los resultados deben interpretarse en conjunto
+            con contexto clínico, comorbilidades y disponibilidad de estudios confirmatorios.
+          </p>
         </div>`;
     }
 
     function limpiar() {
-      document.querySelectorAll('input').forEach(el => {
-        if (el.type === 'checkbox') el.checked = false;
-        else el.value = '';
+      document.querySelectorAll("input").forEach(el => {
+        if (el.type === "checkbox") {
+          el.checked = false;
+        } else {
+          el.value = "";
+        }
       });
-      document.getElementById('sexo').value = 'hombre';
-      document.getElementById('ldlModo').value = 'capturado';
+
+      document.getElementById("sexo").value = "hombre";
+      document.getElementById("ldlModo").value = "capturado";
+      document.getElementById("apobModo").value = "capturada";
+
       cambiarModoLDL();
-      document.getElementById('resultado').innerHTML = `
+      cambiarModoApoB();
+      actualizarCalculosAutomaticos();
+
+      document.getElementById("resultado").innerHTML = `
         <div class="result-block">
           <h3>Listo para calcular</h3>
           <p>Introduce el perfil lipídico y marca los hallazgos clínicos relevantes. Aquí aparecerán el fenotipo, la sospecha etiológica, el nivel de riesgo y la acción sugerida.</p>
         </div>`;
     }
-  </script>
-  <script>
+
     cambiarModoLDL();
+    cambiarModoApoB();
+    actualizarCalculosAutomaticos();
   </script>
 </body>
 </html>
