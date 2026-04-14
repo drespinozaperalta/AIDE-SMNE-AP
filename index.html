@@ -119,7 +119,7 @@
       color: var(--muted);
     }
 
-    .field input, .field select {
+    .field input, .field select, .field textarea {
       width: 100%;
       border: 1px solid #cbd6e2;
       background: #fff;
@@ -129,7 +129,7 @@
       outline: none;
     }
 
-    .field input:focus, .field select:focus {
+    .field input:focus, .field select:focus, .field textarea:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(0, 90, 210, 0.12);
     }
@@ -272,6 +272,23 @@
       line-height: 1.45;
     }
 
+    .summary-box {
+      min-height: 220px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .credits {
+      margin-top: 26px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #f9fbfe;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
     @media print {
       body {
         background: white;
@@ -282,9 +299,13 @@
       .grid {
         grid-template-columns: 1fr;
       }
-      .card, .hero {
+      .card, .hero, .credits {
         box-shadow: none;
         border: 1px solid #d9d9d9;
+      }
+      .summary-box {
+        border: none;
+        padding: 0;
       }
     }
 
@@ -303,7 +324,7 @@
       </p>
       <p class="subtle" style="color: rgba(255,255,255,0.90); margin-top: 10px;">
         Incluye LDL-C capturado o calculado, ApoB capturada o estimada, colesterol no-HDL, colesterol remanente,
-        razones lipídicas, semaforización de riesgo y notas metodológicas.
+        razones lipídicas, semaforización de riesgo, resumen clínico copiable y exportación a PDF.
       </p>
     </section>
 
@@ -413,7 +434,8 @@
         <div class="actions">
           <button class="btn-primary" onclick="evaluar()">Interpretar algoritmo</button>
           <button class="btn-secondary" onclick="limpiar()">Limpiar</button>
-          <button class="btn-outline" onclick="window.print()">Imprimir resultado</button>
+          <button class="btn-outline" onclick="copiarResumenClinico()">Copiar resumen clínico</button>
+          <button class="btn-outline" onclick="exportarPDF()">Exportar PDF</button>
         </div>
 
         <div class="result-block no-print" style="margin-top: 16px;">
@@ -441,6 +463,14 @@
         </div>
 
         <div class="result-block">
+          <h3>Resumen clínico estructurado</h3>
+          <div class="field">
+            <textarea id="resumenClinico" class="summary-box" readonly>Genera primero una interpretación del algoritmo para crear el resumen clínico.</textarea>
+          </div>
+          <div class="hint">Este texto está pensado para copiarse a una nota clínica, resumen de consulta o correo académico.</div>
+        </div>
+
+        <div class="result-block">
           <h3>Limitaciones de la calculadora</h3>
           <ul class="mini-list">
             <li>No sustituye valoración especializada.</li>
@@ -451,9 +481,16 @@
         </div>
       </section>
     </div>
+
+    <div class="credits">
+      <strong>Créditos</strong><br>
+      Actualizado hasta el 07 de Abril 2026. Búsqueda de la literatura, algoritmo, codificación y diseño de flujo por Diego Espinoza-Peralta.
+    </div>
   </div>
 
   <script>
+    let ultimoResumenGenerado = "";
+
     function val(id) {
       const raw = document.getElementById(id).value;
       if (raw === "") return null;
@@ -609,6 +646,81 @@
       return notas;
     }
 
+    function generarResumenClinico(data) {
+      const {
+        ct, hdl, tg, ldl, noHdl, apob, remanente,
+        feno, diagnostico, accion, derivacion,
+        alertas, modoLDL, modoApoB,
+        razonCtHdl, razonTgHdl, razonNoHdlApoB
+      } = data;
+
+      const resumen = [
+        "RESUMEN CLÍNICO ESTRUCTURADO",
+        "",
+        "Perfil lipídico:",
+        `- Colesterol total: ${ct.toFixed(2)} mg/dL`,
+        `- HDL-C: ${hdl.toFixed(2)} mg/dL`,
+        `- Triglicéridos: ${tg.toFixed(2)} mg/dL`,
+        `- LDL-C utilizado: ${formatOrNA(ldl, " mg/dL")} (${modoLDL === "calculado" ? "calculado" : "capturado"})`,
+        `- Colesterol no-HDL: ${noHdl.toFixed(2)} mg/dL`,
+        `- Colesterol remanente: ${remanente !== null ? remanente.toFixed(2) + " mg/dL" : "No calculable"}`,
+        `- ApoB utilizada: ${formatOrNA(apob, " mg/dL")} (${modoApoB === "estimada" ? "estimada" : "capturada"})`,
+        "",
+        "Razones derivadas:",
+        `- Razón CT/HDL: ${razonCtHdl ? razonCtHdl.toFixed(2) : "No calculable"}`,
+        `- Razón TG/HDL: ${razonTgHdl ? razonTgHdl.toFixed(2) : "No calculable"}`,
+        `- Razón no-HDL/ApoB: ${razonNoHdlApoB ? razonNoHdlApoB.toFixed(2) : "No disponible"}`,
+        "",
+        "Interpretación:",
+        `- Fenotipo lipídico: ${feno.nombre}`,
+        `- Riesgo: ${feno.riesgo}`,
+        `- Diagnóstico probable: ${diagnostico}`,
+        "",
+        "Conducta sugerida:",
+        `${accion}`,
+        "",
+        "Derivación:",
+        `${derivacion}`,
+        "",
+        "Alertas clínicas relevantes:",
+        ...alertas.map(a => `- ${a}`),
+        "",
+        "Nota:",
+        "Herramienta de apoyo clínico. No sustituye juicio médico ni valoración especializada."
+      ].join("\n");
+
+      return resumen;
+    }
+
+    async function copiarResumenClinico() {
+      const texto = document.getElementById("resumenClinico").value.trim();
+
+      if (!texto || texto === "Genera primero una interpretación del algoritmo para crear el resumen clínico.") {
+        alert("Primero genera una interpretación del algoritmo.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(texto);
+        alert("Resumen clínico copiado al portapapeles.");
+      } catch (error) {
+        const textarea = document.getElementById("resumenClinico");
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        alert("Resumen clínico copiado al portapapeles.");
+      }
+    }
+
+    function exportarPDF() {
+      const texto = document.getElementById("resumenClinico").value.trim();
+      if (!texto || texto === "Genera primero una interpretación del algoritmo para crear el resumen clínico.") {
+        alert("Primero genera una interpretación del algoritmo antes de exportar.");
+        return;
+      }
+      window.print();
+    }
+
     function evaluar() {
       const ct = val("ct");
       const hdl = val("hdl");
@@ -632,6 +744,8 @@
             <h3>Faltan datos</h3>
             <p>Para correr el algoritmo necesito colesterol total, HDL-C y triglicéridos, además de un LDL-C válido ya sea capturado o calculado.</p>
           </div>`;
+        document.getElementById("resumenClinico").value = "Genera primero una interpretación del algoritmo para crear el resumen clínico.";
+        ultimoResumenGenerado = "";
         return;
       }
 
@@ -773,11 +887,22 @@
         <div class="result-block">
           <h3>Descargo clínico</h3>
           <p class="disclaimer">
-            Esta herramienta resume reglas del algoritmo AIDE-SMNE y sirve como apoyo para médicos de atención primaria.
+            Esta herramienta resume reglas del algoritmo AIDE y sirve como apoyo para médicos de atención primaria.
             No sustituye guías, juicio clínico ni valoración especializada. Los resultados deben interpretarse en conjunto
             con contexto clínico, comorbilidades y disponibilidad de estudios confirmatorios.
           </p>
         </div>`;
+
+      const resumen = generarResumenClinico({
+        ct, hdl, tg, ldl, noHdl, apob,
+        remanente: colesterolRemanente,
+        feno, diagnostico, accion, derivacion,
+        alertas, modoLDL, modoApoB,
+        razonCtHdl, razonTgHdl, razonNoHdlApoB
+      });
+
+      ultimoResumenGenerado = resumen;
+      document.getElementById("resumenClinico").value = resumen;
     }
 
     function limpiar() {
@@ -796,6 +921,9 @@
       cambiarModoLDL();
       cambiarModoApoB();
       actualizarCalculosAutomaticos();
+
+      ultimoResumenGenerado = "";
+      document.getElementById("resumenClinico").value = "Genera primero una interpretación del algoritmo para crear el resumen clínico.";
 
       document.getElementById("resultado").innerHTML = `
         <div class="result-block">
